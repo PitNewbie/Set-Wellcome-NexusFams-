@@ -1,138 +1,115 @@
 module.exports = (req, res) => {
-  // Tangkap nama dari URL (misal: /Kaisar -> Kaisar)
-  let nama = req.query.nama || "Member Baru";
+  // Tangkap nama dari query/path
+  let rawNama = req.query.nama || "Member Baru";
   
-  // Format huruf kapital di awal nama
-  nama = nama.charAt(0).toUpperCase() + nama.slice(1);
+  // Ubah tanda hubung (-) menjadi spasi & Kapital di awal kata (contoh: kaisar-tempe -> Kaisar Tempe)
+  let nama = rawNama.replace(/-/g, ' ');
+  nama = nama.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
-  // Pengaturan Tampilan Preview WhatsApp
+  // Tautan gambar langsung (Direct Link) yang cepat dibaca bot WA
+  const ogImage = "https://files.catbox.moe/8u72g7.jpg"; 
+
   const ogTitle = `Selamat Datang, ${nama}! ✨`;
-  const ogDesc = `Halo ${nama}, ada pesan sambutan spesial untukmu. Klik link ini untuk membuka!`;
-  // Ganti URL gambar di bawah dengan foto sambutan kamu sendiri (harus direct link gambar)
-  const ogImage = "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&auto=format&fit=crop&q=80";
+  const ogDesc = `Halo ${nama}, ada pesan sambutan khusus dari Nexus Fams untukmu. Klik link ini untuk membuka!`;
+  
+  const host = req.headers.host || 'vercel.app';
+  const protocol = req.headers['x-forwarded-proto'] || 'https';
+  const fullUrl = `${protocol}://${host}/${rawNama}`;
 
-  const html = `
-  <!DOCTYPE html>
-  <html lang="id">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Open Graph Meta Tags (Khusus WhatsApp / Social Preview) -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="${ogTitle}">
-    <meta property="og:description" content="${ogDesc}">
-    <meta property="og:image" content="${ogImage}">
-    <meta property="og:image:width" content="800">
-    <meta property="og:image:height" content="600">
+  const html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>${ogTitle}</title>
+  <meta name="title" content="${ogTitle}">
+  <meta name="description" content="${ogDesc}">
 
-    <title>${ogTitle}</title>
+  <!-- Open Graph / WhatsApp Meta Tags -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="${fullUrl}">
+  <meta property="og:title" content="${ogTitle}">
+  <meta property="og:description" content="${ogDesc}">
+  <meta property="og:image" content="${ogImage}">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="600">
+  <meta property="og:image:height" content="600">
+  <meta property="og:site_name" content="Nexus Fams">
 
-    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif; }
-      body {
-        background: #090d16;
-        color: #f8fafc;
-        min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
-        background-image: 
-          radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
-          radial-gradient(circle at 90% 80%, rgba(147, 51, 234, 0.15) 0%, transparent 40%);
-      }
-      .card {
-        background: rgba(15, 23, 42, 0.75);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 24px;
-        padding: 28px;
-        max-width: 380px;
-        width: 100%;
-        text-align: center;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      }
-      .img-container {
-        width: 100%;
-        height: 200px;
-        border-radius: 16px;
-        overflow: hidden;
-        margin-bottom: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-      }
-      .img-container img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-      .badge {
-        display: inline-block;
-        padding: 6px 14px;
-        background: rgba(56, 189, 248, 0.1);
-        border: 1px solid rgba(56, 189, 248, 0.3);
-        color: #38bdf8;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        margin-bottom: 12px;
-      }
-      h1 {
-        font-size: 1.6rem;
-        font-weight: 800;
-        margin-bottom: 8px;
-        background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-      p {
-        color: #94a3b8;
-        font-size: 0.95rem;
-        line-height: 1.6;
-        margin-bottom: 24px;
-      }
-      .highlight {
-        color: #f59e0b;
-        font-weight: 700;
-      }
-      .btn {
-        display: block;
-        width: 100%;
-        padding: 14px;
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        color: #ffffff;
-        font-weight: 700;
-        text-decoration: none;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
-        transition: transform 0.2s;
-      }
-      .btn:active {
-        transform: scale(0.98);
-      }
-    </style>
-  </head>
-  <body>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body {
+      background: #0b0f19;
+      color: #f1f5f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .card {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 24px;
+      max-width: 360px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+    .card img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      border-radius: 14px;
+      margin-bottom: 18px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-radius: 20px;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+    }
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
+    .name-glow { color: #38bdf8; }
+    p { color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin-bottom: 20px; }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #25d366, #128c7e);
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 10px;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
 
-    <div class="card">
-      <div class="img-container">
-        <img src="${ogImage}" alt="Sambutan">
-      </div>
-      <span class="badge">Welcome Greetings</span>
-      <h1>Halo, <span class="highlight">${nama}</span>! 👋</h1>
-      <p>Selamat datang di NexusFams. Kami sangat senang kamu bisa bergabung di sini!</p>
-      
-      <a href="https://whatsapp.com/channel/0029Vb8WUbxE50UjmpWeXb2D" class="btn">Gabung Chanel Marga</a>
-    </div>
+  <div class="card">
+    <img src="${ogImage}" alt="Foto Sambutan">
+    <span class="badge">NEXUS FAMS</span>
+    <h1>Halo, <span class="name-glow">${nama}</span>! 👋</h1>
+    <p>Selamat datang di komunitas kami! Senang sekali kamu bisa bergabung bersama kami.</p>
+    <a href="https://chat.whatsapp.com/" class="btn">Masuk Komunitas 🚀</a>
+  </div>
 
-  </body>
-  </html>
-  `;
+</body>
+</html>`;
 
-  res.setHeader('Content-Type', 'text/html');
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 's-maxage=1, stale-while-revalidate');
   res.status(200).send(html);
 };
       
