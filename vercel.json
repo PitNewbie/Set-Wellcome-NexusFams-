@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/:nama", "destination": "/api/index" },
+    { "source": "/", "destination": "/api/index" }
+  ]
+}
